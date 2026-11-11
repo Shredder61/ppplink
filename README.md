@@ -12,6 +12,8 @@ These include:
 - **Gmail SMTP relay** – provides an SMTP relay for PsiMail.
 - **SSH server** – enables remote access to the Android device.
 
+IMPORTANT - the additional files needed have not yet been uploaded to this repository. 
+
 The enhancement is designed to reduce manual setup after connecting the Psion.
 
 ### Development status
