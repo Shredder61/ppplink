@@ -1,3 +1,31 @@
+## Psion / Termux Enhancements
+
+This fork contains experimental enhancements for running PPP Link on an Android device (Hiby R5 music player) connected to a Psion palmtop.
+
+### Automatic Termux service startup
+
+When a PPP session is successfully established, the app can automatically request Termux to start the supporting services required by the Psion environment.
+
+These include:
+
+- **Psion Sidecar** – serves the Sidecar homepage and Guardian crossword downloads.
+- **Gmail SMTP relay** – provides an SMTP relay for PsiMail.
+- **SSH server** – enables remote access to the Android device.
+
+The enhancement is designed to reduce manual setup after connecting the Psion.
+
+### Development status
+
+- Automatic service startup implemented.
+- Tested on a HiBy R5 running Android 8.1.
+- Sidecar, SMTP relay and SSH startup confirmed.
+- Further testing of Psion connectivity, reboot behaviour and USB reconnection remains in progress.
+
+### Development branch
+
+`termux-autostart`
+
+These changes are experimental and are maintained separately from the original project.
 # PPP Link
 
 An Android/Linux/MacOS PPP server for retro computers. Plug a USB serial adapter into the
