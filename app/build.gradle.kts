@@ -9,7 +9,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "org.ppplink"
+        applicationId = "org.ppplink.psion"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

@@ -31,6 +31,42 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class LinkService : Service() {
+    private var termuxStartupRequested = false
+
+
+    private fun startTermuxServices() {
+        try {
+            val intent = Intent().apply {
+                setClassName(
+                    "com.termux",
+                    "com.termux.app.RunCommandService"
+                )
+                action = "com.termux.RUN_COMMAND"
+
+                putExtra(
+                    "com.termux.RUN_COMMAND_PATH",
+                    "/data/data/com.termux/files/home/start-psion-services.sh"
+                )
+
+                putExtra(
+                    "com.termux.RUN_COMMAND_WORKDIR",
+                    "/data/data/com.termux/files/home"
+                )
+
+                putExtra(
+                    "com.termux.RUN_COMMAND_BACKGROUND",
+                    true
+                )
+            }
+
+            startService(intent)
+            LogBuffer.log("Termux startup requested")
+
+        } catch (e: Exception) {
+            LogBuffer.log("Termux startup failed: ${e.message}")
+        }
+    }
+
 
     companion object {
         const val CHANNEL_ID = "ppplink_channel"
@@ -74,13 +110,28 @@ class LinkService : Service() {
         super.onCreate()
         settingsRepo = SettingsRepository(this)
         engine = LinkEngine(applicationContext)
+
+        engine.onSessionStarted = {
+            if (!termuxStartupRequested) {
+                termuxStartupRequested = true
+                LogBuffer.log("PPP session established; requesting Termux services")
+                startTermuxServices()
+            } else {
+                LogBuffer.log("Termux startup already requested")
+            }
+        }
+
         engine.onFatal = { _ ->
             serviceScope.launch { shutDown(keepState = true) }
         }
+
         createNotificationChannel()
 
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "PppLink::WakeLock").apply {
+        wakeLock = powerManager.newWakeLock(
+            PowerManager.PARTIAL_WAKE_LOCK,
+            "PppLink::WakeLock"
+        ).apply {
             setReferenceCounted(false)
         }
 
@@ -145,9 +196,21 @@ class LinkService : Service() {
                 LinkStatus.setState(LinkState.Error("Start failed: ${e.message}"))
                 LinkEngine.StartResult.Failed(e.message ?: "unknown")
             }
-            if (result is LinkEngine.StartResult.Failed) {
-                // Engine has already cleaned up and set the state; just stop running.
-                shutDown(keepState = true)
+
+
+            when (result) {
+                LinkEngine.StartResult.Started -> {
+                    LogBuffer.log("PPP started successfully")
+                }
+
+                LinkEngine.StartResult.WaitingForPermission -> {
+                    LogBuffer.log("Waiting for USB permission; Termux not started")
+                }
+
+                is LinkEngine.StartResult.Failed -> {
+                    // Engine has already cleaned up and set the state; just stop running.
+                    shutDown(keepState = true)
+                }
             }
         }
     }

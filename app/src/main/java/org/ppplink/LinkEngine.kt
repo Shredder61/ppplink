@@ -129,6 +129,7 @@ class LinkEngine(private val context: Context) {
     private val bytesOut = AtomicLong()
 
     private val sniffer = PppSniffer { onPppEvent(it) }
+    var onSessionStarted: (() -> Unit)? = null
 
     // ---------------------------------------------------------------- public API
 
@@ -237,6 +238,8 @@ class LinkEngine(private val context: Context) {
         }
     }
 
+
+
     private fun beginSession(l: SerialLine): Boolean {
         line = l
         LinkStatus.setAdapterName(l.description)
@@ -245,6 +248,8 @@ class LinkEngine(private val context: Context) {
             endSession()
             return false
         }
+
+        onSessionStarted?.invoke()
         return true
     }
 
